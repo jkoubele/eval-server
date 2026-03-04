@@ -12,6 +12,11 @@ class Challenges(StrEnum):
     CHALLENGE_2 = "Coffin break"
 
 
+class Languages(StrEnum):
+    PYTHON = "Python"
+    R = "R"
+
+
 db_connection_string = "postgresql://evaluser:evalpass@localhost:5432/evaldb"
 
 
@@ -112,22 +117,24 @@ if clicked_submit:
             st.badge("Please provide your name.", color="red")
         file_suffix = Path(uploaded_file.name).suffix.lower()
         if file_suffix == '.py':
-            language = 'python'
+            language = Languages.PYTHON.value
         elif file_suffix == '.r':
-            language = 'r'
+            language = Languages.R.value
         else:
             is_valid_submission = False
             st.badge("Please submit either .py or .R script.", color="red")
         if is_valid_submission:
+            print(f"{language=}")
             submission_data = {'challenge_id': Challenges(challenge).name,
-                               'name': name}
+                               'name': name,
+                               'language': language}
             with psycopg.connect(db_connection_string) as conn:
                 submission_id = insert_row(conn, submission_data)
                 print(f"submission_id=")
 
             output_folder = Path(f'./submissions/{submission_id}')
             output_folder.mkdir(parents=True, exist_ok=True)
-            file_name = 'script.py' if language == 'python' else 'script.R'
+            file_name = 'script.py' if language == Languages.PYTHON.value else 'script.R'
 
             with open(output_folder / file_name, "wb") as f:
                 f.write(uploaded_file.getbuffer())

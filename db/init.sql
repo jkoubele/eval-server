@@ -5,6 +5,9 @@ CREATE TABLE submissions (
   challenge_id TEXT NOT NULL,
   name TEXT NOT NULL,
 
+  language TEXT NOT NULL
+         CHECK (language IN ('Python', 'R')),
+
   status TEXT NOT NULL DEFAULT 'uploading'
          CHECK (status IN ('uploading', 'waiting', 'evaluated')),
 
