@@ -4,12 +4,54 @@ from enum import StrEnum
 from time import time
 from datetime import datetime
 import psycopg
+from pathlib import Path
 
 
 class Challenges(StrEnum):
     CHALLENGE_1 = "Population of naked mole rats"
     CHALLENGE_2 = "Coffin break"
 
+
+db_connection_string = "postgresql://evaluser:evalpass@localhost:5432/evaldb"
+
+
+def insert_row(conn, data: dict, table='submissions'):
+    columns = ", ".join(data.keys())
+    placeholders = ", ".join(["%s"] * len(data))
+
+    query = f"""
+        INSERT INTO {table} ({columns})
+        VALUES ({placeholders})
+        RETURNING id
+    """
+
+    with conn.cursor() as cur:
+        cur.execute(query, tuple(data.values()))
+        return cur.fetchone()[0]
+
+
+def update_row(conn, row_id, data: dict, table='submissions'):
+    assignments = ", ".join([f"{k} = %s" for k in data.keys()])
+
+    query = f"""
+        UPDATE {table}
+        SET {assignments}
+        WHERE id = %s
+    """
+
+    with conn.cursor() as cur:
+        cur.execute(query, tuple(data.values()) + (row_id,))
+
+
+@st.cache_data(ttl=30)
+def load_submissions():
+    with psycopg.connect(db_connection_string) as conn:
+        return pd.read_sql("SELECT * FROM submissions", conn)
+
+
+st.set_page_config(
+    page_title="Programming Challenges"  # , layout="wide"
+)
 
 st.title('Programming challenges')
 
@@ -56,26 +98,52 @@ st.header("Submit a solution")
 name = st.text_input("Your name:")
 uploaded_file = st.file_uploader('Upload a solution')
 
-if uploaded_file is not None:
-    if not name:
-        st.badge("Please provide your name", color="red")
+clicked_submit = st.button("Submit")
+
+if clicked_submit:
+    is_valid_submission = True
+    language = None
+    if uploaded_file is None:
+        is_valid_submission = False
+        st.badge("Please select a file (.py or .R script)", color="red")
     else:
-        with open(uploaded_file.name, "wb") as f:
-            f.write(uploaded_file.getbuffer())
+        if not name:
+            is_valid_submission = False
+            st.badge("Please provide your name.", color="red")
+        file_suffix = Path(uploaded_file.name).suffix.lower()
+        if file_suffix == '.py':
+            language = 'python'
+        elif file_suffix == '.r':
+            language = 'r'
+        else:
+            is_valid_submission = False
+            st.badge("Please submit either .py or .R script.", color="red")
+        if is_valid_submission:
+            submission_data = {'challenge_id': Challenges(challenge).name,
+                               'name': name}
+            with psycopg.connect(db_connection_string) as conn:
+                submission_id = insert_row(conn, submission_data)
+                print(f"submission_id=")
 
-        st.success(f"File uploaded: {uploaded_file.name}")
+            output_folder = Path(f'./submissions/{submission_id}')
+            output_folder.mkdir(parents=True, exist_ok=True)
+            file_name = 'script.py' if language == 'python' else 'script.R'
 
-@st.cache_data(ttl=30)
-def load_submissions():
-    with psycopg.connect("postgresql://evaluser:evalpass@localhost:5432/evaldb") as conn:
-        return pd.read_sql("SELECT * FROM submissions", conn)
-    
+            with open(output_folder / file_name, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+
+            with psycopg.connect(db_connection_string) as conn:
+                update_row(conn, submission_id, {"status": "waiting"})
+
+            st.success(f"File uploaded: {uploaded_file.name}")
+            load_submissions.clear()
+
 st.header("Leaderboard")
 clicked_refresh = st.button("\U0001F504 Refresh")
 if clicked_refresh:
     load_submissions.clear()
 
-df = load_submissions()  
+df = load_submissions()
 
 mock_results = pd.DataFrame(data={'Time': [1, 2, 3],
                                   'Name': ['Jakub', 'Lara', 'Pavel']})

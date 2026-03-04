@@ -5,8 +5,8 @@ CREATE TABLE submissions (
   challenge_id TEXT NOT NULL,
   name TEXT NOT NULL,
 
-  status TEXT NOT NULL DEFAULT 'waiting'
-         CHECK (status IN ('evaluated','waiting')),
+  status TEXT NOT NULL DEFAULT 'uploading'
+         CHECK (status IN ('uploading', 'waiting', 'evaluated')),
 
   timed_out BOOLEAN,
   produced_output BOOLEAN,
