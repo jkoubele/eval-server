@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16
+    container_name: eval_postgres
+    environment:
+      POSTGRES_DB: evaldb
+      POSTGRES_USER: evaluser
+      POSTGRES_PASSWORD: evalpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - eval_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  eval_pgdata:
