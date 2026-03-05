@@ -1,85 +1,90 @@
-from pathlib import Path
-import subprocess
 import json
+import shutil
+import subprocess
+from pathlib import Path
+from time import sleep
+
+import pandas as pd
 import psycopg
 
-submission_folder = Path('./example_submission').resolve()
+from utils import Languages, db_connection_string, update_row
 
-docker_image = "quay.io/jupyter/scipy-notebook:2026-03-02"
+docker_image_python = "quay.io/jupyter/scipy-notebook:2026-03-02"
+docker_image_r = "quay.io/jupyter/r-notebook:2026-03-02"
 
+while True:
+    with psycopg.connect(db_connection_string) as conn:
+        df = pd.read_sql("SELECT * FROM submissions", conn)
 
-def insert_row(conn, data: dict, table='submissions'):
-    columns = ", ".join(data.keys())
-    placeholders = ", ".join(["%s"] * len(data))
+    df = df[df["status"] == "waiting"].sort_values("submission_time")
+    if len(df) == 0:
+        sleep(3)
+        continue
 
-    query = f"""
-        INSERT INTO {table} ({columns})
-        VALUES ({placeholders})
-        RETURNING id
-    """
+    if len(df) > 0:
+        job_row = df.iloc[0]
+        submission_folder = Path(f"./submissions/{job_row['id']}").resolve()
 
-    with conn.cursor() as cur:
-        cur.execute(query, tuple(data.values()))
-        return cur.fetchone()[0]
+        script_name = 'script.py' if job_row['language'] == Languages.PYTHON.value else 'script.R'
+        docker_image = docker_image_python if job_row['language'] == Languages.PYTHON.value else docker_image_r
+        execute_command = 'python' if job_row['language'] == Languages.PYTHON.value else 'Rscript'
 
+        eval_data_folder = Path(f"./eval_data/{job_row['challenge_id']}").resolve()
+        shutil.copyfile(eval_data_folder / 'input.json', submission_folder / 'input.json')
 
-def update_row(conn, row_id, data: dict, table='submissions'):
-    assignments = ", ".join([f"{k} = %s" for k in data.keys()])
+        with open(eval_data_folder / 'solution.json') as f:
+            reference_json = json.load(f)
 
-    query = f"""
-        UPDATE {table}
-        SET {assignments}
-        WHERE id = %s
-    """
+        cmd = f"""
+        docker run --rm --cpus=1 \
+           --stop-timeout 1 \
+          -v "{submission_folder}:/work" \
+          -w /work \
+          --user "$(id -u):$(id -g)" \
+          --network none \
+          --entrypoint bash {docker_image} \
+          -c 'TIMEFORMAT="CPU %6U %6S"; {{ time {execute_command} {script_name} >/dev/null; }} 2>&1 | awk "/^CPU /{{print \\$2+\\$3}}"'
+        """
 
-    with conn.cursor() as cur:
-        cur.execute(query, tuple(data.values()) + (row_id,))
+        timed_out = False
+        time_limit = 60
+        cpu_time = None
+        try:
+            result = subprocess.run(
+                cmd,
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=time_limit,  # wall clock seconds
+            )
+        except subprocess.TimeoutExpired as e:
+            timed_out = True
+            print("Timeed out")
 
+        output_file = submission_folder / 'output.json'
+        produced_output = output_file.exists()
 
-cmd = f"""
-docker run --rm --cpus=1 \
-   --stop-timeout 1 \
-  -v "{submission_folder}:/work" \
-  -w /work \
-  --user "$(id -u):$(id -g)" \
-  --entrypoint bash {docker_image} \
-  -c 'TIMEFORMAT="CPU %6U %6S"; {{ time python example_script.py >/dev/null; }} 2>&1 | awk "/^CPU /{{print \\$2+\\$3}}"'
-"""
+        correct = False
+        if produced_output:
+            try:
+                with open(output_file) as f:
+                    output_json = json.load(f)
+                correct = str(output_json.get("result")) == str(reference_json.get("result"))
+            except Exception:
+                correct = False
 
-time_limit = 60
+        if not timed_out:
+            try:
+                cpu_time = float(result.stdout.strip())
+            except Exception:
+                cpu_time = None
+                print(f"CPU time undefined for submission ID P{job_row['id']}")
 
-try:
-    result = subprocess.run(
-        cmd,
-        shell=True,
-        capture_output=True,
-        text=True,
-        timeout=time_limit,  # wall clock seconds
-    )
-except subprocess.TimeoutExpired as e:
-    # docker run got killed by Python after 60s
-    # e.stdout / e.stderr may exist
-    timed_out = True
-    print("Time out")
-
-print("stdout:", result.stdout)
-print("stderr:", result.stderr)
-print("return code:", result.returncode)
-
-outputed_file = submission_folder / 'example_output.json'
-if outputed_file.exists():
-    print("Output generated sucesfully!")
-
-    with open(outputed_file) as file:
-        sumbission_solution = json.load(file)
-
-    reference_solution_file = submission_folder / 'reference_solution.json'
-    with open(reference_solution_file) as file:
-        reference_solution = json.load(file)
-
-    match_reference = reference_solution['result'] == sumbission_solution['result']
-
-
-else:
-    print("No output generated")
-    pass  # No output provided
+        with psycopg.connect(db_connection_string) as conn:
+            update_row(conn, job_row['id'], {"status": "evaluated",
+                                             "timed_out": timed_out,
+                                             'produced_output': produced_output,
+                                             'correct': correct,
+                                             'cpu_time': cpu_time})
+    sleep(3)
+    break
