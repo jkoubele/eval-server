@@ -47,7 +47,7 @@ while True:
         """
 
         timed_out = False
-        time_limit = 1
+        time_limit = 60
         cpu_time = None
         try:
             result = subprocess.run(
