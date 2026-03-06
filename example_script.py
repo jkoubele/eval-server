@@ -19,12 +19,12 @@ if __name__ == "__main__":
     # Fibbonaci to generate some example CPU usage
     a = 1
     b = 1    
-    for i in range(7_00_000):
+    for i in range(1_00_000):
         c = b + a
         a = b
         b = c
 
-    result = 11  # Replace with your computed result
+    result = 178  # Replace with your computed result
 
     with open(args.output_json, 'w') as output_file:
         json.dump({"result": result}, output_file)
