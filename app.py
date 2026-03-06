@@ -67,6 +67,20 @@ uploaded_file = st.file_uploader('Upload a solution')
 
 clicked_submit = st.button("Submit", type="primary")
 
+st.header("Evaluation")
+
+st.markdown("""
+            Your script will be automatically evaluated by running it and comparing its output versus a reference solution.
+            * The following docker images are used to execute the code: ```quay.io/jupyter/r-notebook``` for R scripts and 
+            ```quay.io/jupyter/scipy-notebook``` for Python script. These images should contain most of the standard scientific tools
+            (tidyverse for R, pandas/numpy/scipy for Python). Additionally, packages *gmp* (for representing large integers) and 
+            *jsonlite, rjson, argparse* (for CLI and JSON parsing) were installed into the R image.
+            * Installing other packages during the runtime is not allowed.
+            * The script should produce JSON file *output.json* according to the template.
+            * The *output.json* is compared against reference solution. The result can be either a number or a string (both options are accepted).
+            * Scripts running for more than 60s during the evaluation are timed out.
+            """)
+
 if clicked_submit:
     is_valid_submission = True
     language = None
