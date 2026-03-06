@@ -10,7 +10,8 @@ import psycopg
 from utils import Languages, db_connection_string, update_row
 
 docker_image_python = "quay.io/jupyter/scipy-notebook:2026-03-02"
-docker_image_r = "quay.io/jupyter/r-notebook:2026-03-02"
+# docker_image_r = "quay.io/jupyter/r-notebook:2026-03-02"
+docker_image_r = "r_eval"
 
 while True:
     with psycopg.connect(db_connection_string) as conn:
