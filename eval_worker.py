@@ -43,11 +43,11 @@ while True:
           --user "$(id -u):$(id -g)" \
           --network none \
           --entrypoint bash {docker_image} \
-          -c 'TIMEFORMAT="CPU %6U %6S"; {{ time {execute_command} {script_name} >/dev/null; }} 2>&1 | awk "/^CPU /{{print \\$2+\\$3}}"'
+          -c 'TIMEFORMAT="CPU %6U %6S"; {{ time {execute_command} {script_name} --input_json ./input.json --output_json ./output.json >/dev/null; }} 2>&1 | awk "/^CPU /{{print \\$2+\\$3}}"'
         """
 
         timed_out = False
-        time_limit = 60
+        time_limit = 1
         cpu_time = None
         try:
             result = subprocess.run(
@@ -59,7 +59,7 @@ while True:
             )
         except subprocess.TimeoutExpired as e:
             timed_out = True
-            print("Timeed out")
+            print("Timed out")
 
         output_file = submission_folder / 'output.json'
         produced_output = output_file.exists()
@@ -69,7 +69,8 @@ while True:
             try:
                 with open(output_file) as f:
                     output_json = json.load(f)
-                correct = str(output_json.get("result")) == str(reference_json.get("result"))
+                correct = output_json.get("result") == reference_json.get("result") or str(
+                    output_json.get("result")) == str(reference_json.get("result"))
             except Exception:
                 correct = False
 
@@ -87,4 +88,3 @@ while True:
                                              'correct': correct,
                                              'cpu_time': cpu_time})
     sleep(3)
-    break
