@@ -48,7 +48,7 @@ if challenge == Challenges.CHALLENGE_1:
     st.subheader('Example solution:')
     st.code('{"result": 10}', language="json")
 
-    with open("challenge_1.zip", "rb") as file:
+    with open("./starter_packs/challenge_1.zip", "rb") as file:
         st.download_button(
             label="Download challenge starter pack",
             data=file,
