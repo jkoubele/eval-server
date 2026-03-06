@@ -43,11 +43,13 @@ if challenge == Challenges.CHALLENGE_1:
 
     st.image("./images/naked_mole_rat.png", width=400)
 
-    st.subheader('Example input:')
-    st.code('{"n": 4}', language="json")
-    st.subheader('Example solution:')
-    st.code('{"result": 10}', language="json")
+    # st.subheader('Example input:')
+    # st.code('{"n": 4}', language="json")
+    # st.subheader('Example solution:')
+    # st.code('{"result": 10}', language="json")
 
+    st.subheader('Starter pack')
+    st.markdown('Download a starter pack with script templates and test inputs.')
     with open("./starter_packs/challenge_1.zip", "rb") as file:
         st.download_button(
             label="Download challenge starter pack",
@@ -58,11 +60,12 @@ elif challenge == Challenges.CHALLENGE_2:
     st.write("Coffee!")
 
 st.header("Submit a solution")
+st.markdown('Upload R or Python script with your solution, following the template from the starter pack.')
 
 name = st.text_input("Your name:")
 uploaded_file = st.file_uploader('Upload a solution')
 
-clicked_submit = st.button("Submit")
+clicked_submit = st.button("Submit", type="primary")
 
 if clicked_submit:
     is_valid_submission = True
@@ -111,9 +114,24 @@ if clicked_refresh:
 
 df = load_submissions()
 
-mock_results = pd.DataFrame(data={'Time': [1, 2, 3],
-                                  'Name': ['Jakub', 'Lara', 'Pavel']})
-st.dataframe(df)
+leaderboard = (
+    df[df['challenge_id'] == Challenges(challenge).name]
+    .query("correct == True")
+    .sort_values("cpu_time")
+    .drop_duplicates(subset="name", keep="first")
+    [["name", "cpu_time", "language", "submission_time"]]
+    .reset_index(drop=True)
+)
+
+leaderboard.insert(0, "Position", leaderboard.index + 1)
+leaderboard["submission_time"] = pd.to_datetime(leaderboard["submission_time"]).dt.strftime("%Y-%m-%d %H:%M:%S")
+
+st.dataframe(leaderboard, hide_index=True)
 
 st.subheader("All sumbissions")
-st.dataframe(df)
+all_submissions = df[df['challenge_id'] == Challenges(challenge).name]
+all_submissions = all_submissions.drop(columns=['challenge_id', 'metadata'])
+all_submissions = all_submissions[
+    ['id', 'name', 'submission_time', 'status', 'cpu_time', 'language', 'produced_output', 'correct', 'timed_out']]
+all_submissions = all_submissions.sort_values("id", ascending=False)
+st.dataframe(all_submissions, hide_index=True)
