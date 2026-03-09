@@ -1,6 +1,7 @@
 import argparse
 import json
 from pathlib import Path
+import sys
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -18,6 +19,10 @@ if __name__ == "__main__":
         input_data = json.load(input_file)
 
     n = input_data['n']  # number of months
+    # Pro-tip: you probably want to remove the limit for maximum digits of integer that can be converted to string,
+    # to write the output to JSON:
+    sys.set_int_max_str_digits(0)
+
     # Your code goes here
 
     result = 42  # Replace with your computed result

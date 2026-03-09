@@ -19,11 +19,6 @@ st.set_page_config(
 
 st.title('Programming challenges')
 
-df = pd.DataFrame({
-    'first column': [1, 2, 3, 4],
-    'second column': [10, 20, 30, 40]
-})
-
 challenge = st.selectbox(
     'Select a challenge',
     [x.value for x in Challenges])
@@ -79,7 +74,6 @@ elif challenge == Challenges.CHALLENGE_3:
             data=file,
             file_name="challenge_3.zip")
 
-
 st.header("Submit a solution")
 st.markdown('Upload R or Python script with your solution, following the template from the starter pack.')
 
@@ -127,7 +121,7 @@ if clicked_submit:
 
             st.success(f"File uploaded: {uploaded_file.name}")
             load_submissions.clear()
-            
+
 st.header("Evaluation")
 
 st.markdown("""
