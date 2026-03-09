@@ -59,6 +59,27 @@ if challenge == Challenges.CHALLENGE_1:
 elif challenge == Challenges.CHALLENGE_2:
     st.write("Coffee!")
 
+elif challenge == Challenges.CHALLENGE_3:
+    st.markdown("""
+            *n* Beyeronians go to the Mensa for lunch. They all wear identical-looking data miner outfits, but each has a favorite unique protein name written inside their hat. 
+            They hang their hats on a rack. After a long lunch, a fire drill occurs, and in the rush, everyone grabs exactly one hat at random.\n
+            Calculate the number of ways the hats can be distributed such that absolutely nobody gets their own hat.
+""")
+
+    # st.subheader('Example input:')
+    # st.code('{"n": 4}', language="json")
+    # st.subheader('Example solution:')
+    # st.code('{"result": 10}', language="json")
+
+    st.subheader('Starter pack')
+    st.markdown('Download a starter pack with script templates and test inputs.')
+    with open("./starter_packs/challenge_3.zip", "rb") as file:
+        st.download_button(
+            label="Download challenge starter pack",
+            data=file,
+            file_name="challenge_3.zip")
+
+
 st.header("Submit a solution")
 st.markdown('Upload R or Python script with your solution, following the template from the starter pack.')
 
