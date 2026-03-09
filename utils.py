@@ -4,6 +4,7 @@ from enum import StrEnum
 class Challenges(StrEnum):
     CHALLENGE_1 = "Population of naked mole rats"
     CHALLENGE_2 = "Coffin break"
+    CHALLENGE_2 = "Data Miners in Mensa"
 
 
 class Languages(StrEnum):
