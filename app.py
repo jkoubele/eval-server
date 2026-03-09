@@ -24,6 +24,7 @@ challenge = st.selectbox(
     [x.value for x in Challenges])
 
 st.header("Task description")
+
 if challenge == Challenges.CHALLENGE_1:
     st.markdown("""
              The CECAD animal facility is keeping a population of naked mole rats. After they are born, they take 1 month to become mature.
@@ -47,12 +48,68 @@ if challenge == Challenges.CHALLENGE_1:
     st.markdown('Download a starter pack with script templates and test inputs.')
     with open("./starter_packs/challenge_1.zip", "rb") as file:
         st.download_button(
-            label="Download challenge starter pack",
+            label="Download challenge 1 starter pack",
             data=file,
             file_name="challenge_1.zip")
 
 elif challenge == Challenges.CHALLENGE_2:
-    st.write("Coffee!")
+    st.markdown("""
+    You are a dwarf and your are digging a hole: Diggy, diggy hole, digging a hole!
+    
+    Specifically, you are digging many holes. The underground kingdom consists on multiple halls, 
+    and you would like to connect them all by tunnels, such that every hall can be reached from any other one by a path.
+    
+    Fortunately, some of the tunnels were already built, and now you are figuring out how to build the rest. You have
+    a set of possible tunnels that can be built; however, digging a hole is a hard work, and some
+    tunnels are harder to dig through than others. 
+    
+    Given the number of halls, the list of already existing tunnels, and the list of additional tunnels that can be built
+    together with their digging costs, compute the minimum total cost required to make all halls connected.  
+""")
+    st.markdown("#### Example input:")
+    st.code("""
+{
+  "num_halls": 5,
+  "existing_tunnels": [
+    [1, 2],
+    [3, 4]
+  ],
+  "potential_tunnels": [
+    [1, 3, 11],
+    [1, 4, 8],
+    [2, 4, 6],
+    [4, 5, 7],
+    [5, 2, 1]
+  ]
+}
+""", language="json")
+    st.markdown("""
+* The variable *num_halls* gives the number of halls.
+* The variable *existing_tunnels* is a list of tunnels. Each tunel is a tuple (list with two elements), specifying the 
+start and end halls  (halls are 1-indexed). The tunnels are undirected (i.e. start and end halls are interchangeable).
+* The variable *potential_tunnels* is a list of tunnels than can be build. Each such tunel is a triplet (list with three elements), specifying the 
+start hall, end hall, and the cost of building the tunnel.
+""")
+    st.markdown("The example input above can be visualized as this:")
+    st.image("./images/halls.png", width=420)
+    st.markdown("""
+In this example, the optimal solution is to build the tunnel between halls **2** and **5** (for a cost of **1**), and the tunnel
+between halls **2** and **4** (for a cost of **6**), resulting in the total cost of **7**. Building these tunnels make every possible pair 
+of halls connected by some path.
+    """)
+
+    st.subheader('Starter pack')
+    st.markdown('Download a starter pack with script templates and test inputs.')
+    with open("./starter_packs/challenge_2.zip", "rb") as file:
+        st.download_button(
+            label="Download challenge 2 starter pack",
+            data=file,
+            file_name="challenge_2.zip")
+
+    st.markdown("#### Recommended background music")
+    st.markdown("The following 'playlist' is highly recommended for listening to during coding this challenge: ")
+    st.video("https://www.youtube.com/watch?v=OZ_fKg7CKws")
+
 
 elif challenge == Challenges.CHALLENGE_3:
     st.markdown("""
@@ -70,7 +127,7 @@ elif challenge == Challenges.CHALLENGE_3:
     st.markdown('Download a starter pack with script templates and test inputs.')
     with open("./starter_packs/challenge_3.zip", "rb") as file:
         st.download_button(
-            label="Download challenge starter pack",
+            label="Download challenge 3 starter pack",
             data=file,
             file_name="challenge_3.zip")
 
