@@ -157,11 +157,16 @@ leaderboard["submission_time"] = pd.to_datetime(leaderboard["submission_time"]).
 
 st.dataframe(leaderboard, hide_index=True)
 
-st.subheader("All sumbissions")
+st.subheader("All submissions")
 
 all_submissions = df[df['challenge_id'] == Challenges(challenge).name]
 all_submissions = all_submissions.drop(columns=['challenge_id', 'metadata'])
 all_submissions = all_submissions[
-    ['id', 'name', 'submission_time', 'status', 'cpu_time', 'language', 'produced_output', 'correct', 'timed_out']]
-all_submissions = all_submissions.sort_values("id", ascending=False)
-st.dataframe(all_submissions, hide_index=True)
+    ['id', 'name', 'submission_time', 'status', 'cpu_time', 'language', 'produced_output', 'correct', 'timed_out']
+]
+all_submissions = all_submissions.sort_values("id", ascending=False).head(50)
+
+row_height = 35
+height = min((len(all_submissions) + 1) * row_height, 800)
+
+st.dataframe(all_submissions, hide_index=True, height=height)
