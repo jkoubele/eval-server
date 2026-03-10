@@ -6,6 +6,8 @@ from time import sleep
 
 import pandas as pd
 import psycopg
+import sys
+sys.set_int_max_str_digits(0)
 
 from utils import Languages, db_connection_string, update_row
 
