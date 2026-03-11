@@ -41,6 +41,8 @@ while True:
         cmd = f"""
         docker run --rm --cpus=1 \
            --stop-timeout 1 \
+           --memory=2g \
+          --memory-swap=2g \
           -v "{submission_folder}:/work" \
           -w /work \
           --user "$(id -u):$(id -g)" \
